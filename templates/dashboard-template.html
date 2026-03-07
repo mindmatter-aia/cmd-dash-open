@@ -1,0 +1,1433 @@
+<!-- Command Dashboard v1 — Created by Alex McConnachie | lightleads.com.au -->
+<!-- Command Dashboard v2 — Workspace-wide scanning by mindm -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>__PAGE_TITLE__</title>
+<style>
+  /* __FONT_IMPORT__ */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface-hover: #1c2330;
+    --surface-active: #222a38;
+    --border: #30363d;
+    --border-light: #3d444d;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --text-dim: #656d76;
+    --accent-blue: #58a6ff;
+    --accent-green: #3fb950;
+    --accent-purple: #bc8cff;
+    --accent-orange: #d29922;
+    --accent-teal: #39d2c0;
+    --accent-pink: #f778ba;
+    --accent-cyan: #79c0ff;
+    --radius: 8px;
+    --radius-lg: 12px;
+    --theme-toggle-bg: var(--surface);
+    --font-display: var(--font);
+  }
+
+  html.light {
+    --bg: #f6f8fa;
+    --surface: #ffffff;
+    --surface-hover: #f0f2f5;
+    --surface-active: #e8ebef;
+    --border: #d0d7de;
+    --border-light: #bbc0c7;
+    --text: #1f2328;
+    --text-muted: #57606a;
+    --text-dim: #768390;
+    --accent-blue: #0969da;
+    --accent-green: #1a7f37;
+    --accent-purple: #8250df;
+    --accent-orange: #9a6700;
+    --accent-teal: #1b7c83;
+    --accent-pink: #bf3989;
+    --accent-cyan: #0550ae;
+    --theme-toggle-bg: var(--surface);
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  }
+
+  /* __THEME_OVERRIDES__ */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 12px 60px;
+  }
+
+  /* ── Top Bar ── */
+  .topbar {
+    padding: 20px 28px 0;
+    flex-shrink: 0;
+  }
+  .topbar-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 24px; }
+  .topbar-left img { height: 36px; width: auto; }
+  .topbar h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; font-family: var(--font-display); }
+  .topbar-stats { display: flex; gap: 20px; }
+  .stat { display: flex; align-items: baseline; gap: 5px; }
+  .stat-num { font-size: 18px; font-weight: 700; font-family: var(--mono); }
+  .stat-label { font-size: 12px; color: var(--text-muted); }
+
+  /* ── Tab Toggle ── */
+  .tab-group {
+    display: flex;
+    gap: 2px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 3px;
+  }
+  .tab-btn {
+    padding: 6px 18px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--text-dim);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { color: var(--text-muted); }
+  .tab-btn.active {
+    background: var(--surface-active);
+    color: var(--text);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+
+  /* ── Controls ── */
+  .controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 0 28px 16px;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .search-input {
+    flex: 0 0 auto;
+    width: 260px;
+    padding: 8px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 14px;
+    font-family: var(--font);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .search-input:focus { border-color: var(--accent-blue); }
+  .search-input::placeholder { color: var(--text-dim); }
+
+  .filter-sep {
+    width: 1px;
+    height: 24px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+
+  .pill-group { display: flex; gap: 4px; flex-wrap: wrap; }
+  .pill {
+    padding: 6px 14px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .pill:hover { border-color: var(--text-muted); color: var(--text); }
+  .pill.on { color: #fff; }
+  .pill.on[data-f="all"] { background: var(--accent-blue); border-color: var(--accent-blue); }
+  .pill.on[data-f="global"] { background: var(--accent-cyan); border-color: var(--accent-cyan); }
+  .pill.on[data-f="shared"] { background: var(--accent-teal); border-color: var(--accent-teal); }
+  .pill.on[data-f="meta"] { background: var(--accent-purple); border-color: var(--accent-purple); }
+  .pill.on[data-f="ops"] { background: var(--accent-green); border-color: var(--accent-green); }
+  .pill.on[data-f="content"] { background: var(--accent-orange); border-color: var(--accent-orange); }
+  /* Skill domain pills */
+  .pill.on[data-f="integration"] { background: var(--accent-blue); border-color: var(--accent-blue); }
+  .pill.on[data-f="content-mkt"] { background: var(--accent-pink); border-color: var(--accent-pink); }
+  .pill.on[data-f="web"] { background: var(--accent-teal); border-color: var(--accent-teal); }
+  .pill.on[data-f="skill-meta"] { background: var(--accent-purple); border-color: var(--accent-purple); }
+  /* Agent category pills */
+  .pill.on[data-f="architecture"] { background: var(--accent-purple); border-color: var(--accent-purple); }
+  .pill.on[data-f="review"] { background: var(--accent-blue); border-color: var(--accent-blue); }
+  .pill.on[data-f="testing"] { background: var(--accent-green); border-color: var(--accent-green); }
+  .pill.on[data-f="build"] { background: var(--accent-orange); border-color: var(--accent-orange); }
+  .pill.on[data-f="docs"] { background: var(--accent-teal); border-color: var(--accent-teal); }
+  .pill.on[data-f="security"] { background: var(--accent-pink); border-color: var(--accent-pink); }
+  .pill.on[data-f="cleanup"] { background: var(--accent-cyan); border-color: var(--accent-cyan); }
+  /* Dynamic project pills get accent-blue by default */
+  .pill.on.project-pill { background: var(--accent-blue); border-color: var(--accent-blue); opacity: 0.85; }
+
+  kbd {
+    font-family: var(--mono); font-size: 10px; padding: 1px 5px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 3px; color: var(--text-dim);
+  }
+
+  /* ── Layout ── */
+  .layout { display: flex; flex: 1; overflow: hidden; }
+
+  /* ── Left Panel ── */
+  .left {
+    flex: 1; overflow-y: auto; padding: 20px 28px;
+    transition: flex 0.25s ease;
+  }
+  .left::-webkit-scrollbar { display: none; }
+  .left { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* ── Top Panels Row ── */
+  .top-panels {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  /* ── Workflow Diagram ── */
+  .wf-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 20px 24px; overflow-x: auto;
+  }
+  .wf-title {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--text-dim); margin-bottom: 14px;
+  }
+  .wf-row { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+  .wf-row:last-child { margin-bottom: 0; }
+  .wf-label {
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.7px; color: var(--text-dim); width: 64px; flex-shrink: 0;
+  }
+  .wf-node {
+    padding: 4px 10px; border-radius: 5px; font-size: 11px; font-family: var(--mono);
+    font-weight: 500; cursor: pointer; transition: all 0.12s; white-space: nowrap;
+  }
+  .wf-node:hover { filter: brightness(1.2); transform: translateY(-1px); }
+  .wf-node.m { background: rgba(188,140,255,0.12); color: var(--accent-purple); border: 1px solid rgba(188,140,255,0.2); }
+  .wf-node.o { background: rgba(63,185,80,0.12); color: var(--accent-green); border: 1px solid rgba(63,185,80,0.2); }
+  .wf-node.c { background: rgba(210,153,34,0.12); color: var(--accent-orange); border: 1px solid rgba(210,153,34,0.2); }
+  .wf-arr { color: var(--text-dim); font-size: 13px; flex-shrink: 0; }
+  .wf-note { font-size: 11px; color: var(--text-dim); font-style: italic; }
+
+  /* ── Automated Services Panel ── */
+  .svc-box {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 20px 24px; display: flex; flex-direction: column;
+  }
+  .svc-title {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--text-dim); margin-bottom: 14px;
+  }
+  .svc-list { display: flex; flex-direction: column; gap: 12px; flex: 1; }
+  .svc-item { display: flex; gap: 10px; align-items: flex-start; }
+  .svc-icon {
+    width: 28px; height: 28px; border-radius: 6px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 13px;
+  }
+  .svc-icon.running { background: rgba(63,185,80,0.12); color: var(--accent-green); }
+  .svc-icon.scheduled { background: rgba(88,166,255,0.12); color: var(--accent-blue); }
+  .svc-info { display: flex; flex-direction: column; gap: 1px; }
+  .svc-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .svc-detail { font-size: 11px; color: var(--text-dim); line-height: 1.4; }
+
+  /* ── Skills Info Banner ── */
+  .skills-banner {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 20px 24px; margin-bottom: 24px;
+    display: flex; align-items: flex-start; gap: 16px;
+  }
+  .skills-banner-icon {
+    width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+    background: rgba(57,210,192,0.1); border: 1px solid rgba(57,210,192,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: var(--accent-teal);
+  }
+  .skills-banner-text h3 {
+    font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px;
+  }
+  .skills-banner-text p {
+    font-size: 13px; color: var(--text-muted); line-height: 1.5;
+  }
+  .skills-banner-flow {
+    display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap;
+  }
+  .skills-banner-flow .sf-step {
+    padding: 4px 10px; border-radius: 5px; font-size: 11px; font-family: var(--mono); font-weight: 500;
+    background: rgba(57,210,192,0.08); color: var(--accent-teal); border: 1px solid rgba(57,210,192,0.15);
+  }
+  .skills-banner-flow .sf-arr { color: var(--text-dim); font-size: 13px; }
+
+  /* ── Scope-Level Section Headers ── */
+  .scope-hdr {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 24px 0 12px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .scope-hdr:first-child { margin-top: 0; }
+  .scope-hdr:hover { background: var(--surface-hover); }
+  .scope-hdr.global { border-left: 3px solid var(--accent-cyan); }
+  .scope-hdr.shared { border-left: 3px solid var(--accent-teal); }
+  .scope-hdr.project { border-left: 3px solid var(--accent-blue); }
+  .scope-icon { font-size: 16px; flex-shrink: 0; }
+  .scope-name { font-size: 15px; font-weight: 700; font-family: var(--font-display); }
+  .scope-ct { font-size: 12px; color: var(--text-dim); }
+  .scope-subtitle { font-size: 11px; color: var(--text-dim); margin-left: 4px; font-style: italic; }
+  .scope-chevron {
+    font-size: 12px; color: var(--text-dim); transition: transform 0.2s;
+    flex-shrink: 0; margin-left: auto;
+  }
+  .scope-chevron.collapsed { transform: rotate(-90deg); }
+  .scope-body { overflow: hidden; transition: max-height 0.3s ease, opacity 0.2s ease; }
+  .scope-body.collapsed { max-height: 0 !important; opacity: 0; margin-bottom: 0; }
+
+  /* ── Stream Dividers (within scope sections) ── */
+  .stream-divider {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 16px 0 8px;
+    padding-bottom: 4px;
+  }
+  .stream-divider .sd-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .stream-divider .sd-dot.m { background: var(--accent-purple); }
+  .stream-divider .sd-dot.o { background: var(--accent-green); }
+  .stream-divider .sd-dot.c { background: var(--accent-orange); }
+  .stream-divider .sd-dot.integration { background: var(--accent-blue); }
+  .stream-divider .sd-dot.content-mkt { background: var(--accent-pink); }
+  .stream-divider .sd-dot.web { background: var(--accent-teal); }
+  .stream-divider .sd-dot.skill-meta { background: var(--accent-purple); }
+  .stream-divider .sd-name { font-size: 12px; font-weight: 600; color: var(--text-dim); }
+  .stream-divider .sd-ct { font-size: 11px; color: var(--text-dim); }
+
+  /* ── Section Headers (legacy, kept for category sub-groups) ── */
+  .sec-hdr {
+    display: flex; align-items: center; gap: 8px;
+    margin: 20px 0 12px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer; user-select: none;
+  }
+  .sec-hdr:first-child { margin-top: 0; }
+  .sec-hdr:hover .sec-name { color: var(--text); }
+  .sec-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .sec-dot.m { background: var(--accent-purple); }
+  .sec-dot.o { background: var(--accent-green); }
+  .sec-dot.c { background: var(--accent-orange); }
+  .sec-dot.integration { background: var(--accent-blue); }
+  .sec-dot.content-mkt { background: var(--accent-pink); }
+  .sec-dot.web { background: var(--accent-teal); }
+  .sec-dot.skill-meta { background: var(--accent-purple); }
+  .sec-name { font-size: 14px; font-weight: 600; transition: color 0.1s; }
+  .sec-ct { font-size: 12px; color: var(--text-dim); margin-left: auto; }
+  .sec-chevron {
+    font-size: 12px; color: var(--text-dim); transition: transform 0.2s;
+    flex-shrink: 0; margin-left: 6px;
+  }
+  .sec-chevron.collapsed { transform: rotate(-90deg); }
+  .sec-body { overflow: hidden; transition: max-height 0.3s ease, opacity 0.2s ease; }
+  .sec-body.collapsed { max-height: 0 !important; opacity: 0; margin-bottom: 0; }
+
+  /* ── Grid View ── */
+  .g-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    padding: 4px 8px 12px;
+  }
+  .g-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px 18px; cursor: pointer; transition: all 0.15s;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .g-card:hover { border-color: var(--border-light); background: var(--surface-hover); }
+  .g-card.active { border-color: var(--accent-blue); background: var(--surface-active); }
+  .g-card.skill-active { border-color: var(--accent-teal); background: var(--surface-active); }
+  .g-card.agent-active { border-color: var(--accent-purple); background: var(--surface-active); }
+  .g-card .gc-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+
+  .gc-name {
+    font-family: var(--mono); font-size: 13px; font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .gc-name.m { color: var(--accent-purple); }
+  .gc-name.o { color: var(--accent-green); }
+  .gc-name.c { color: var(--accent-orange); }
+  .gc-name.integration { color: var(--accent-blue); }
+  .gc-name.content-mkt { color: var(--accent-pink); }
+  .gc-name.web { color: var(--accent-teal); }
+  .gc-name.skill-meta { color: var(--accent-purple); }
+  .gc-name.agent { color: var(--accent-purple); }
+
+  .gc-badge {
+    font-size: 9px; font-weight: 600; padding: 2px 7px; border-radius: 8px;
+    text-transform: uppercase; letter-spacing: 0.3px; flex-shrink: 0; white-space: nowrap;
+  }
+  .gc-badge.interactive { background: rgba(57,210,192,0.12); color: var(--accent-teal); }
+  .gc-badge.automated { background: rgba(63,185,80,0.12); color: var(--accent-green); }
+  .gc-badge.one-shot { background: rgba(88,166,255,0.12); color: var(--accent-blue); }
+  .gc-badge.auto-invoked { background: rgba(57,210,192,0.1); color: var(--accent-teal); }
+  .gc-badge.agent-badge { background: rgba(188,140,255,0.1); color: var(--accent-purple); }
+
+  .gc-tagline {
+    font-size: 14px; font-weight: 500; color: var(--text); line-height: 1.4;
+  }
+  .gc-desc {
+    font-size: 12px; color: var(--text-muted); line-height: 1.5;
+  }
+
+  /* ── Project Badge on Cards ── */
+  .gc-project-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    text-align: right;
+    margin-top: auto;
+    padding-top: 4px;
+  }
+
+  /* ── Right Detail Panel ── */
+  .right {
+    width: 0; overflow: hidden; transition: width 0.25s ease;
+    border-left: 1px solid transparent; flex-shrink: 0;
+  }
+  .right.open { width: 420px; border-left-color: var(--border); }
+  .detail { width: 420px; height: 100%; overflow-y: auto; padding: 28px 24px; }
+  .detail::-webkit-scrollbar { display: none; }
+  .detail { -ms-overflow-style: none; scrollbar-width: none; }
+
+  .d-close {
+    position: absolute; top: 16px; right: 16px; width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text-muted); font-size: 14px; cursor: pointer; transition: all 0.15s;
+  }
+  .d-close:hover { background: var(--surface-hover); color: var(--text); }
+
+  .d-head { margin-bottom: 20px; position: relative; }
+  .d-stream { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .d-stream.m { color: var(--accent-purple); }
+  .d-stream.o { color: var(--accent-green); }
+  .d-stream.c { color: var(--accent-orange); }
+  .d-stream.integration { color: var(--accent-blue); }
+  .d-stream.content-mkt { color: var(--accent-pink); }
+  .d-stream.web { color: var(--accent-teal); }
+  .d-stream.skill-meta { color: var(--accent-purple); }
+  .d-stream.agent { color: var(--accent-purple); }
+
+  /* ── Detail Panel: Project Line ── */
+  .d-project {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  .d-project-icon { font-size: 13px; }
+
+  .d-name { font-family: var(--mono); font-size: 18px; font-weight: 700; margin-bottom: 4px; padding-right: 36px; }
+  .d-tagline { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 8px; }
+  .d-badge {
+    display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px;
+    border-radius: 10px; text-transform: uppercase; letter-spacing: 0.4px;
+  }
+  .d-badge.interactive { background: rgba(57,210,192,0.12); color: var(--accent-teal); }
+  .d-badge.automated { background: rgba(63,185,80,0.12); color: var(--accent-green); }
+  .d-badge.one-shot { background: rgba(88,166,255,0.12); color: var(--accent-blue); }
+  .d-badge.auto-invoked { background: rgba(57,210,192,0.1); color: var(--accent-teal); }
+  .d-badge.agent-badge { background: rgba(188,140,255,0.1); color: var(--accent-purple); }
+  .d-desc { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px; }
+  .d-section { margin-bottom: 20px; }
+  .d-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-dim); margin-bottom: 6px; }
+  .d-val { font-size: 13px; line-height: 1.55; color: var(--text); }
+  .d-output-box {
+    display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+    background: rgba(139,148,158,0.06); border: 1px solid var(--border);
+    border-radius: var(--radius); font-family: var(--mono); font-size: 12px; color: var(--text-muted);
+  }
+  .d-output-box svg { flex-shrink: 0; }
+  .d-chains { display: flex; flex-wrap: wrap; gap: 6px; }
+  .d-chain {
+    padding: 4px 10px; background: rgba(88,166,255,0.08); border: 1px solid rgba(88,166,255,0.2);
+    border-radius: 5px; font-family: var(--mono); font-size: 11px; color: var(--accent-blue);
+    cursor: pointer; transition: all 0.12s;
+  }
+  .d-chain:hover { background: rgba(88,166,255,0.15); }
+  .d-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .d-tag { padding: 2px 8px; background: rgba(139,148,158,0.08); border-radius: 4px; font-size: 11px; color: var(--text-dim); }
+  .d-trigger-box {
+    padding: 12px 14px; background: rgba(57,210,192,0.04); border: 1px solid rgba(57,210,192,0.12);
+    border-radius: var(--radius); font-size: 13px; color: var(--text-muted); line-height: 1.55;
+  }
+  .d-context-box {
+    padding: 12px 14px; background: rgba(139,148,158,0.04); border: 1px solid var(--border);
+    border-radius: var(--radius); color: var(--text-muted); line-height: 1.55;
+    font-family: var(--mono); font-size: 12px;
+  }
+  .d-tools-box {
+    padding: 12px 14px; background: rgba(188,140,255,0.04); border: 1px solid rgba(188,140,255,0.12);
+    border-radius: var(--radius); color: var(--text-muted); line-height: 1.55;
+    font-family: var(--mono); font-size: 12px;
+  }
+  .d-divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+  /* ── Theme Toggle ── */
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: var(--radius);
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text-muted); font-size: 18px;
+    cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .theme-toggle:hover { background: var(--surface-hover); color: var(--text); border-color: var(--border-light); }
+
+  .no-results { text-align: center; padding: 60px 20px; color: var(--text-dim); font-size: 14px; }
+  .hidden { display: none !important; }
+
+  @media (max-width: 1200px) {
+    .g-grid { grid-template-columns: repeat(2, 1fr); }
+    .top-panels { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 1000px) {
+    .right.open { width: 340px; }
+    .detail { width: 340px; }
+  }
+  @media (max-width: 768px) {
+    .topbar, .controls { padding-left: 16px; padding-right: 16px; }
+    .left { padding: 16px; }
+    .right.open { width: 100%; position: absolute; top: 0; right: 0; bottom: 0; background: var(--bg); z-index: 200; }
+    .detail { width: 100%; }
+    .g-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-row">
+    <div class="topbar-left">
+      <!-- __LOGO_IMG__ -->
+      <h1>__PAGE_TITLE__</h1>
+      <div class="tab-group">
+        <button class="tab-btn active" data-tab="commands">Commands</button>
+        <button class="tab-btn" data-tab="skills">Skills</button>
+        <button class="tab-btn hidden" data-tab="agents" id="agents-tab-btn">Agents</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div class="topbar-stats" id="topbar-stats"></div>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle light/dark mode" title="Toggle light/dark mode">&#9790;</button>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <input type="text" class="search-input" id="search" placeholder="Search commands..." autocomplete="off">
+  <div class="filter-sep"></div>
+  <div class="pill-group" id="project-pills">
+    <button class="pill on" data-f="all">All</button>
+    <!-- __PROJECT_PILLS__ -->
+  </div>
+  <div class="filter-sep"></div>
+  <div class="pill-group" id="cmd-pills">
+    <button class="pill on" data-f="all">All</button>
+    <button class="pill" data-f="meta">Meta</button>
+    <button class="pill" data-f="ops">Ops</button>
+    <button class="pill" data-f="content">Content</button>
+  </div>
+  <div class="pill-group hidden" id="skill-pills">
+    <button class="pill on" data-f="all">All</button>
+    <button class="pill" data-f="integration">Integration</button>
+    <button class="pill" data-f="content-mkt">Content</button>
+    <button class="pill" data-f="web">Web</button>
+  </div>
+  <div class="pill-group hidden" id="agent-pills">
+    <button class="pill on" data-f="all">All</button>
+  </div>
+  <div style="margin-left:auto;font-size:11px;color:var(--text-dim)"><kbd>/</kbd> search &nbsp; <kbd>Esc</kbd> close</div>
+</div>
+
+<div class="layout">
+  <div class="left" id="left">
+    <!-- ── Commands View ── -->
+    <div id="commands-view">
+      <div class="top-panels">
+        <div class="wf-box">
+          <div class="wf-title">Workflow Chains</div>
+          <!-- __WORKFLOW_HTML__ -->
+          <div class="wf-row">
+            <span class="wf-label">Build</span>
+            <span class="wf-node m" data-go="plan">/plan</span>
+            <span class="wf-arr">&rarr;</span>
+            <span class="wf-node m" data-go="implement">/implement</span>
+            <span class="wf-arr">&rarr;</span>
+            <span class="wf-note">deploy</span>
+          </div>
+        </div>
+
+        <div class="svc-box">
+          <div class="svc-title">Automated Services</div>
+          <div class="svc-list">
+            <!-- __SERVICES_HTML__ -->
+            <div class="svc-item">
+              <div class="svc-icon scheduled">&#9201;</div>
+              <div class="svc-info">
+                <span class="svc-name">Example Service</span>
+                <span class="svc-detail">Background task placeholder<br>Daily 6:00 AM</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="cmd-area"></div>
+      <div class="no-results hidden" id="cmd-no-results">No commands match your search.</div>
+    </div>
+
+    <!-- ── Skills View ── -->
+    <div id="skills-view" class="hidden">
+      <div class="skills-banner">
+        <div class="skills-banner-icon">&#9889;</div>
+        <div class="skills-banner-text">
+          <h3>Auto-Invoked Context Skills</h3>
+          <p>Skills load automatically when __AI_NAME__ detects a relevant task. You don't run them &mdash; they activate in the background to provide specialised context, API references, and domain knowledge.</p>
+          <div class="skills-banner-flow">
+            <span class="sf-step">You describe a task</span>
+            <span class="sf-arr">&rarr;</span>
+            <span class="sf-step">__AI_NAME__ matches a skill</span>
+            <span class="sf-arr">&rarr;</span>
+            <span class="sf-step">Context auto-loads</span>
+            <span class="sf-arr">&rarr;</span>
+            <span class="sf-step">Better results</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="skill-area"></div>
+      <div class="no-results hidden" id="skill-no-results">No skills match your search.</div>
+    </div>
+
+    <!-- ── Agents View ── -->
+    <div id="agents-view" class="hidden">
+      <div id="agent-area"></div>
+      <div class="no-results hidden" id="agent-no-results">No agents match your search.</div>
+    </div>
+  </div>
+
+  <div class="right" id="right">
+    <div class="detail" id="detail"></div>
+  </div>
+</div>
+
+<script>
+/* __DASH_CONFIG__ */
+const dashConfig = { generatedAt:"", projectCount:0, pageTitle:"Workspace Dashboard", aiName:"Claude" };
+
+/* __COMMANDS_DATA__ */
+const commands = [
+  // ── META ──
+  { id:"global--plan", name:"/plan [request]", stream:"meta", mode:"automated",
+    project:"global", scope:"global",
+    tagline:"Write an implementation plan",
+    desc:"Researches the workspace, then creates a step-by-step implementation plan covering current state analysis, proposed changes, design decisions, and a validation checklist.",
+    when:"Before any structural change, new feature, or workflow addition.",
+    input:"Request description or link to a concept doc",
+    output:"Implementation plan document", outputPath:"plans/",
+    chains:["/implement"], tags:["planning","architecture"] },
+
+  { id:"global--implement", name:"/implement [plan-path]", stream:"meta", mode:"automated",
+    project:"global", scope:"global",
+    tagline:"Execute a plan step by step",
+    desc:"Reads a plan, verifies it is ready, then executes each step in order. After building, validates against the checklist and updates documentation.",
+    when:"After /plan produces a reviewed, approved plan.",
+    input:"Path to the plan file",
+    output:"All files specified in the plan", outputPath:"(varies by plan)",
+    chains:[], tags:["building","execution"] },
+
+  // ── OPS ──
+  { id:"example--ops-report", name:"/ops/report", stream:"ops", mode:"automated",
+    project:"example-project", scope:"project",
+    tagline:"Generate a status report",
+    desc:"Pulls data from configured integrations and generates a formatted status report covering key metrics, recent activity, and action items.",
+    when:"Weekly or monthly review. After major milestones.",
+    input:"None",
+    output:"Status report markdown", outputPath:"outputs/ops/reports/",
+    chains:[], tags:["metrics","reporting"] },
+
+  // ── CONTENT ──
+  { id:"example--content-draft", name:"/content/draft [topic]", stream:"content", mode:"interactive",
+    project:"example-project", scope:"project",
+    tagline:"Draft a piece of content",
+    desc:"Interactive content drafting workflow: collects topic details, researches with web search, selects a template, and produces a publish-ready draft following brand voice guidelines.",
+    when:"When creating blog posts, newsletters, or long-form content.",
+    input:"Topic or title idea",
+    output:"Content draft markdown", outputPath:"outputs/content/drafts/",
+    chains:[], tags:["writing","content","drafts"] }
+];
+
+/* __SKILLS_DATA__ */
+const skills = [
+  // ── INTEGRATION ──
+  { id:"example--api-context", name:"API Context", domain:"integration",
+    project:"example-project", scope:"project",
+    tagline:"API clients and integrations",
+    desc:"Auto-loads API integration context including client patterns, authentication setup, endpoint references, and error handling conventions for connected services.",
+    trigger:"Working on API integrations, writing or debugging API calls, extending API client libraries",
+    context:"API reference docs, client library patterns, authentication setup, endpoint maps" },
+
+  // ── CONTENT & MARKETING ──
+  { id:"example--content-strategy", name:"Content Strategy", domain:"content-mkt",
+    project:"example-project", scope:"project",
+    tagline:"Content planning and brand voice",
+    desc:"Auto-loads content strategy context including brand voice guidelines, content calendar patterns, audience segments, and SEO keyword targets.",
+    trigger:"Writing content, planning editorial calendars, applying brand voice, or targeting SEO keywords",
+    context:"Brand voice guide, content calendar, audience segments, SEO targets" },
+
+  // ── WEB & DESIGN ──
+  { id:"example--web-context", name:"Web Dev Context", domain:"web",
+    project:"example-project", scope:"project",
+    tagline:"Websites, pages, and performance",
+    desc:"Auto-loads web development context including page structure patterns, performance targets, responsive design conventions, and accessibility best practices.",
+    trigger:"Building web pages, auditing performance, writing HTML/CSS, or optimising for Core Web Vitals",
+    context:"Page structure templates, performance targets, responsive breakpoints, accessibility checklist" }
+];
+
+/* __AGENTS_DATA__ */
+const agents = [
+  // Example agent — replace during install
+  { id:"shared--architect", name:"Architect", category:"architecture",
+    project:"shared-library", scope:"shared",
+    desc:"Software architecture specialist for system design, scalability, and technical decision-making.",
+    whenToUse:"When planning new features, refactoring large systems, or making architectural decisions.",
+    tools:"Read, Grep, Glob", model:"opus" }
+];
+
+// ── State ──
+let activeTab = 'commands';
+let projectFilter = 'all';
+let cmdFilter = 'all';
+let skillFilter = 'all';
+let agentFilter = 'all';
+let selectedCmd = null;
+let selectedSkill = null;
+let selectedAgent = null;
+
+const cmdArea = document.getElementById('cmd-area');
+const skillArea = document.getElementById('skill-area');
+const agentArea = document.getElementById('agent-area');
+const cmdNoRes = document.getElementById('cmd-no-results');
+const skillNoRes = document.getElementById('skill-no-results');
+const agentNoRes = document.getElementById('agent-no-results');
+const searchEl = document.getElementById('search');
+const rightPanel = document.getElementById('right');
+const detailEl = document.getElementById('detail');
+const commandsView = document.getElementById('commands-view');
+const skillsView = document.getElementById('skills-view');
+const agentsView = document.getElementById('agents-view');
+const projectPills = document.getElementById('project-pills');
+const cmdPills = document.getElementById('cmd-pills');
+const skillPills = document.getElementById('skill-pills');
+const agentPills = document.getElementById('agent-pills');
+const agentsTabBtn = document.getElementById('agents-tab-btn');
+const topbarStats = document.getElementById('topbar-stats');
+const scopeCollapsed = {};
+
+// ── Show agents tab if agents exist ──
+if (agents.length > 0) {
+  agentsTabBtn.classList.remove('hidden');
+}
+
+// ── Build dynamic project pills ──
+function buildProjectPills() {
+  const allItems = [...commands, ...skills, ...agents];
+  const projects = new Map();
+  allItems.forEach(item => {
+    if (!projects.has(item.project)) {
+      projects.set(item.project, item.scope);
+    }
+  });
+  // Sort: global first, then shared, then alphabetical projects
+  const sorted = [...projects.entries()].sort((a, b) => {
+    const order = { global: 0, shared: 1, project: 2 };
+    const diff = (order[a[1]] || 2) - (order[b[1]] || 2);
+    if (diff !== 0) return diff;
+    return a[0].localeCompare(b[0]);
+  });
+
+  const pillContainer = projectPills;
+  // Keep the "All" pill, clear the rest
+  const allPill = pillContainer.querySelector('[data-f="all"]');
+  pillContainer.innerHTML = '';
+  pillContainer.appendChild(allPill);
+
+  sorted.forEach(([proj, scope]) => {
+    const btn = document.createElement('button');
+    btn.className = 'pill project-pill';
+    btn.dataset.f = proj;
+    btn.dataset.scope = scope;
+    const icon = scope === 'global' ? '\u{1F310}' : scope === 'shared' ? '\u{1F517}' : '\u{1F4C1}';
+    btn.textContent = icon + ' ' + proj;
+    pillContainer.appendChild(btn);
+  });
+
+  // Rebind click handlers
+  pillContainer.querySelectorAll('.pill').forEach(p => {
+    p.addEventListener('click', () => {
+      pillContainer.querySelectorAll('.pill').forEach(b => b.classList.remove('on'));
+      p.classList.add('on');
+      projectFilter = p.dataset.f;
+      renderActiveTab();
+    });
+  });
+}
+
+// ── Dynamic stats ──
+function computeTopbarStats() {
+  const activeItems = getActiveItems();
+
+  if (activeTab === 'commands') {
+    const meta = activeItems.filter(c => c.stream === 'meta').length;
+    const ops = activeItems.filter(c => c.stream === 'ops').length;
+    const content = activeItems.filter(c => c.stream === 'content').length;
+    const total = meta + ops + content;
+    topbarStats.innerHTML = `
+      <div class="stat"><span class="stat-num" style="color:var(--accent-purple)">${meta}</span><span class="stat-label">Meta</span></div>
+      <div class="stat"><span class="stat-num" style="color:var(--accent-green)">${ops}</span><span class="stat-label">Ops</span></div>
+      <div class="stat"><span class="stat-num" style="color:var(--accent-orange)">${content}</span><span class="stat-label">Content</span></div>
+      <div class="stat"><span class="stat-num" style="color:var(--text)">${total}</span><span class="stat-label">Total</span></div>`;
+  } else if (activeTab === 'skills') {
+    const integration = activeItems.filter(s => s.domain === 'integration').length;
+    const contentMkt = activeItems.filter(s => s.domain === 'content-mkt').length;
+    const web = activeItems.filter(s => s.domain === 'web').length;
+    const skillMeta = activeItems.filter(s => s.domain === 'skill-meta').length;
+    const total = integration + contentMkt + web + skillMeta;
+    topbarStats.innerHTML = `
+      <div class="stat"><span class="stat-num" style="color:var(--accent-blue)">${integration}</span><span class="stat-label">Integration</span></div>
+      <div class="stat"><span class="stat-num" style="color:var(--accent-pink)">${contentMkt}</span><span class="stat-label">Content</span></div>
+      <div class="stat"><span class="stat-num" style="color:var(--accent-teal)">${web}</span><span class="stat-label">Web</span></div>
+      ${skillMeta > 0 ? `<div class="stat"><span class="stat-num" style="color:var(--accent-purple)">${skillMeta}</span><span class="stat-label">Meta</span></div>` : ''}
+      <div class="stat"><span class="stat-num" style="color:var(--text)">${total}</span><span class="stat-label">Total</span></div>`;
+  } else if (activeTab === 'agents') {
+    const cats = {};
+    activeItems.forEach(a => { cats[a.category] = (cats[a.category] || 0) + 1; });
+    const total = activeItems.length;
+    let statsHtml = '';
+    const catColors = { architecture:'var(--accent-purple)', review:'var(--accent-blue)', testing:'var(--accent-green)', build:'var(--accent-orange)', docs:'var(--accent-teal)', security:'var(--accent-pink)', cleanup:'var(--accent-cyan)' };
+    Object.entries(cats).forEach(([cat, count]) => {
+      const color = catColors[cat] || 'var(--text-muted)';
+      statsHtml += `<div class="stat"><span class="stat-num" style="color:${color}">${count}</span><span class="stat-label">${cat.charAt(0).toUpperCase() + cat.slice(1)}</span></div>`;
+    });
+    statsHtml += `<div class="stat"><span class="stat-num" style="color:var(--text)">${total}</span><span class="stat-label">Total</span></div>`;
+    topbarStats.innerHTML = statsHtml;
+  }
+}
+
+function getActiveItems() {
+  let items;
+  if (activeTab === 'commands') items = commands;
+  else if (activeTab === 'skills') items = skills;
+  else items = agents;
+
+  if (projectFilter !== 'all') {
+    items = items.filter(i => i.project === projectFilter);
+  }
+  return items;
+}
+
+// ── Tab switching ──
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeTab = btn.dataset.tab;
+    closeDetail();
+    searchEl.value = '';
+    updateView();
+  });
+});
+
+function updateView() {
+  commandsView.classList.add('hidden');
+  skillsView.classList.add('hidden');
+  agentsView.classList.add('hidden');
+  cmdPills.classList.add('hidden');
+  skillPills.classList.add('hidden');
+  agentPills.classList.add('hidden');
+
+  if (activeTab === 'commands') {
+    commandsView.classList.remove('hidden');
+    cmdPills.classList.remove('hidden');
+    searchEl.placeholder = 'Search commands...';
+    renderCommands();
+  } else if (activeTab === 'skills') {
+    skillsView.classList.remove('hidden');
+    skillPills.classList.remove('hidden');
+    searchEl.placeholder = 'Search skills...';
+    renderSkills();
+  } else if (activeTab === 'agents') {
+    agentsView.classList.remove('hidden');
+    agentPills.classList.remove('hidden');
+    searchEl.placeholder = 'Search agents...';
+    renderAgents();
+  }
+  computeTopbarStats();
+}
+
+function renderActiveTab() {
+  if (activeTab === 'commands') renderCommands();
+  else if (activeTab === 'skills') renderSkills();
+  else if (activeTab === 'agents') renderAgents();
+  computeTopbarStats();
+}
+
+// ── Command filter pills ──
+cmdPills.querySelectorAll('.pill').forEach(p => {
+  p.addEventListener('click', () => {
+    cmdPills.querySelectorAll('.pill').forEach(b => b.classList.remove('on'));
+    p.classList.add('on');
+    cmdFilter = p.dataset.f;
+    renderCommands();
+    computeTopbarStats();
+  });
+});
+
+// ── Skill filter pills ──
+skillPills.querySelectorAll('.pill').forEach(p => {
+  p.addEventListener('click', () => {
+    skillPills.querySelectorAll('.pill').forEach(b => b.classList.remove('on'));
+    p.classList.add('on');
+    skillFilter = p.dataset.f;
+    renderSkills();
+    computeTopbarStats();
+  });
+});
+
+// ── Agent filter pills ──
+agentPills.querySelectorAll('.pill').forEach(p => {
+  p.addEventListener('click', () => {
+    agentPills.querySelectorAll('.pill').forEach(b => b.classList.remove('on'));
+    p.classList.add('on');
+    agentFilter = p.dataset.f;
+    renderAgents();
+    computeTopbarStats();
+  });
+});
+
+// ── Search (debounced) ──
+let searchTimeout;
+searchEl.addEventListener('input', () => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => renderActiveTab(), 150);
+});
+
+// ── Keyboard ──
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeDetail();
+  if (e.key === '/' && document.activeElement !== searchEl) { e.preventDefault(); searchEl.focus(); }
+});
+
+// ── Workflow node clicks ──
+document.querySelectorAll('.wf-node[data-go]').forEach(n => {
+  n.addEventListener('click', () => selectCmdById(n.dataset.go));
+});
+
+function modeLabel(m) { return m === 'one-shot' ? 'One-Shot' : m.charAt(0).toUpperCase()+m.slice(1); }
+
+// ── HTML escaping to prevent XSS ──
+function escapeHtml(str) {
+  if (typeof str !== 'string') return str;
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function scopeIcon(scope) {
+  if (scope === 'global') return '\u{1F310}';
+  if (scope === 'shared') return '\u{1F517}';
+  return '\u{1F4C1}';
+}
+
+function scopeLabel(scope) {
+  if (scope === 'global') return 'Global Commands';
+  if (scope === 'shared') return 'Shared Library';
+  return '';
+}
+
+// ── Render Commands (scope-first) ──
+function renderCommands() {
+  const q = searchEl.value.toLowerCase().trim();
+  let filtered = commands.filter(cmd => {
+    if (projectFilter !== 'all' && cmd.project !== projectFilter) return false;
+    if (cmdFilter !== 'all' && cmd.stream !== cmdFilter) return false;
+    if (q) {
+      const hay = [cmd.name, cmd.tagline, cmd.desc, cmd.when, cmd.input, cmd.output, cmd.outputPath, ...cmd.tags, ...cmd.chains, cmd.project].join(' ').toLowerCase();
+      return hay.includes(q);
+    }
+    return true;
+  });
+
+  if (!filtered.length) { cmdArea.innerHTML = ''; cmdNoRes.classList.remove('hidden'); return; }
+  cmdNoRes.classList.add('hidden');
+
+  // Group by scope/project
+  const scopeGroups = groupByScope(filtered);
+  const showProjectBadge = projectFilter === 'all';
+
+  let html = '';
+  scopeGroups.forEach(group => {
+    html += renderScopeSection(group, 'commands', showProjectBadge);
+  });
+
+  cmdArea.innerHTML = html;
+  bindScopeCollapse(cmdArea);
+  bindCardClicks(cmdArea, 'cmd');
+
+  cmdArea.querySelectorAll('.scope-body:not(.collapsed)').forEach(el => {
+    el.style.maxHeight = el.scrollHeight + 'px';
+  });
+}
+
+// ── Render Skills (scope-first) ──
+function renderSkills() {
+  const q = searchEl.value.toLowerCase().trim();
+  let filtered = skills.filter(sk => {
+    if (projectFilter !== 'all' && sk.project !== projectFilter) return false;
+    if (skillFilter !== 'all' && sk.domain !== skillFilter) return false;
+    if (q) {
+      const hay = [sk.name, sk.tagline, sk.desc, sk.trigger, sk.context, sk.project].join(' ').toLowerCase();
+      return hay.includes(q);
+    }
+    return true;
+  });
+
+  if (!filtered.length) { skillArea.innerHTML = ''; skillNoRes.classList.remove('hidden'); return; }
+  skillNoRes.classList.add('hidden');
+
+  const scopeGroups = groupByScope(filtered);
+  const showProjectBadge = projectFilter === 'all';
+
+  let html = '';
+  scopeGroups.forEach(group => {
+    html += renderScopeSection(group, 'skills', showProjectBadge);
+  });
+
+  skillArea.innerHTML = html;
+  bindScopeCollapse(skillArea);
+  bindCardClicks(skillArea, 'skill');
+
+  skillArea.querySelectorAll('.scope-body:not(.collapsed)').forEach(el => {
+    el.style.maxHeight = el.scrollHeight + 'px';
+  });
+}
+
+// ── Render Agents (scope-first) ──
+function renderAgents() {
+  const q = searchEl.value.toLowerCase().trim();
+  let filtered = agents.filter(ag => {
+    if (projectFilter !== 'all' && ag.project !== projectFilter) return false;
+    if (agentFilter !== 'all' && ag.category !== agentFilter) return false;
+    if (q) {
+      const hay = [ag.name, ag.desc, ag.whenToUse, ag.tools, ag.category, ag.project].join(' ').toLowerCase();
+      return hay.includes(q);
+    }
+    return true;
+  });
+
+  if (!filtered.length) { agentArea.innerHTML = ''; agentNoRes.classList.remove('hidden'); return; }
+  agentNoRes.classList.add('hidden');
+
+  const scopeGroups = groupByScope(filtered);
+  const showProjectBadge = projectFilter === 'all';
+
+  let html = '';
+  scopeGroups.forEach(group => {
+    html += renderScopeSection(group, 'agents', showProjectBadge);
+  });
+
+  agentArea.innerHTML = html;
+  bindScopeCollapse(agentArea);
+  bindCardClicks(agentArea, 'agent');
+
+  agentArea.querySelectorAll('.scope-body:not(.collapsed)').forEach(el => {
+    el.style.maxHeight = el.scrollHeight + 'px';
+  });
+}
+
+// ── Group items by scope/project in display order ──
+function groupByScope(items) {
+  const map = new Map();
+  items.forEach(item => {
+    const key = item.project;
+    if (!map.has(key)) {
+      map.set(key, { project: item.project, scope: item.scope, items: [] });
+    }
+    map.get(key).items.push(item);
+  });
+
+  // Sort: global first, shared second, then alphabetical project names
+  return [...map.values()].sort((a, b) => {
+    const order = { global: 0, shared: 1, project: 2 };
+    const diff = (order[a.scope] || 2) - (order[b.scope] || 2);
+    if (diff !== 0) return diff;
+    return a.project.localeCompare(b.project);
+  });
+}
+
+// ── Render a scope section with stream/domain sub-dividers ──
+function renderScopeSection(group, type, showProjectBadge) {
+  const key = group.project;
+  const isCollapsed = scopeCollapsed[key] === true;
+  const icon = scopeIcon(group.scope);
+  const subtitle = group.scope === 'shared' ? '<span class="scope-subtitle">Reusable across projects</span>' : '';
+
+  let html = `<div class="scope-hdr ${group.scope}" data-scope="${escapeHtml(key)}">
+    <span class="scope-icon">${icon}</span>
+    <span class="scope-name">${escapeHtml(group.project)}</span>
+    ${subtitle}
+    <span class="scope-ct">(${group.items.length})</span>
+    <span class="scope-chevron${isCollapsed ? ' collapsed' : ''}">&#9660;</span>
+  </div>`;
+
+  html += `<div class="scope-body${isCollapsed ? ' collapsed' : ''}" data-scopebody="${key}">`;
+
+  if (type === 'commands') {
+    html += renderCommandCards(group.items, showProjectBadge);
+  } else if (type === 'skills') {
+    html += renderSkillCards(group.items, showProjectBadge);
+  } else if (type === 'agents') {
+    html += renderAgentCards(group.items, showProjectBadge);
+  }
+
+  html += '</div>';
+  return html;
+}
+
+// ── Render command cards with stream sub-dividers ──
+function renderCommandCards(items, showProjectBadge) {
+  const streams = {};
+  items.forEach(c => {
+    if (!streams[c.stream]) streams[c.stream] = [];
+    streams[c.stream].push(c);
+  });
+  const labels = { meta: 'Meta', ops: 'Ops', content: 'Content' };
+  const dots = { meta: 'm', ops: 'o', content: 'c' };
+  // Render known streams first in order, then any unknown ones
+  const knownOrder = ['meta', 'ops', 'content'];
+  const allStreams = [...knownOrder.filter(s => streams[s]), ...Object.keys(streams).filter(s => !knownOrder.includes(s))];
+
+  let html = '';
+  for (const s of allStreams) {
+    if (!streams[s] || !streams[s].length) continue;
+    const dotClass = dots[s] || s;
+    const label = labels[s] || s.charAt(0).toUpperCase() + s.slice(1);
+    html += `<div class="stream-divider"><span class="sd-dot ${dotClass}"></span><span class="sd-name">${escapeHtml(label)}</span><span class="sd-ct">(${streams[s].length})</span></div>`;
+    html += '<div class="g-grid">';
+    streams[s].forEach(c => {
+      const act = selectedCmd === c.id ? ' active' : '';
+      html += `<div class="g-card${act}" data-id="${escapeHtml(c.id)}">
+        <div class="gc-top">
+          <span class="gc-name ${dots[c.stream] || c.stream}">${escapeHtml(c.name.split(' ')[0])}</span>
+          <span class="gc-badge ${escapeHtml(c.mode)}">${modeLabel(c.mode)}</span>
+        </div>
+        <div class="gc-tagline">${escapeHtml(c.tagline)}</div>
+        <div class="gc-desc">${escapeHtml(c.desc)}</div>
+        ${showProjectBadge ? `<div class="gc-project-badge">${escapeHtml(c.project)}</div>` : ''}
+      </div>`;
+    });
+    html += '</div>';
+  }
+  return html;
+}
+
+// ── Render skill cards with domain sub-dividers ──
+function renderSkillCards(items, showProjectBadge) {
+  const domains = {};
+  items.forEach(s => {
+    if (!domains[s.domain]) domains[s.domain] = [];
+    domains[s.domain].push(s);
+  });
+  const labels = { integration: 'Integration', 'content-mkt': 'Content & Marketing', web: 'Web & Design', 'skill-meta': 'Meta' };
+  const knownOrder = ['integration', 'content-mkt', 'web', 'skill-meta'];
+  const allDomains = [...knownOrder.filter(d => domains[d]), ...Object.keys(domains).filter(d => !knownOrder.includes(d))];
+
+  let html = '';
+  for (const d of allDomains) {
+    if (!domains[d] || !domains[d].length) continue;
+    const label = labels[d] || d.charAt(0).toUpperCase() + d.slice(1);
+    html += `<div class="stream-divider"><span class="sd-dot ${d}"></span><span class="sd-name">${escapeHtml(label)}</span><span class="sd-ct">(${domains[d].length})</span></div>`;
+    html += '<div class="g-grid">';
+    domains[d].forEach(sk => {
+      const act = selectedSkill === sk.id ? ' skill-active' : '';
+      html += `<div class="g-card${act}" data-skill-id="${escapeHtml(sk.id)}">
+        <div class="gc-top">
+          <span class="gc-name ${sk.domain}">${escapeHtml(sk.name)}</span>
+          <span class="gc-badge auto-invoked">Auto-Invoked</span>
+        </div>
+        <div class="gc-tagline">${escapeHtml(sk.tagline)}</div>
+        <div class="gc-desc">${escapeHtml(sk.desc)}</div>
+        ${showProjectBadge ? `<div class="gc-project-badge">${escapeHtml(sk.project)}</div>` : ''}
+      </div>`;
+    });
+    html += '</div>';
+  }
+  return html;
+}
+
+// ── Render agent cards ──
+function renderAgentCards(items, showProjectBadge) {
+  let html = '<div class="g-grid">';
+  items.forEach(ag => {
+    const act = selectedAgent === ag.id ? ' agent-active' : '';
+    html += `<div class="g-card${act}" data-agent-id="${escapeHtml(ag.id)}">
+      <div class="gc-top">
+        <span class="gc-name agent">${escapeHtml(ag.name)}</span>
+        <span class="gc-badge agent-badge">${escapeHtml(ag.model || 'sonnet')}</span>
+      </div>
+      <div class="gc-tagline">${escapeHtml(ag.category)}</div>
+      <div class="gc-desc">${escapeHtml(ag.desc)}</div>
+      ${showProjectBadge ? `<div class="gc-project-badge">${escapeHtml(ag.project)}</div>` : ''}
+    </div>`;
+  });
+  html += '</div>';
+  return html;
+}
+
+// ── Bind scope collapse ──
+function bindScopeCollapse(container) {
+  container.querySelectorAll('.scope-hdr').forEach(hdr => {
+    hdr.addEventListener('click', () => {
+      const key = hdr.dataset.scope;
+      scopeCollapsed[key] = !scopeCollapsed[key];
+      renderActiveTab();
+    });
+  });
+}
+
+// ── Bind card clicks ──
+function bindCardClicks(container, type) {
+  if (type === 'cmd') {
+    container.querySelectorAll('[data-id]').forEach(el => {
+      el.addEventListener('click', () => selectCmdById(el.dataset.id));
+    });
+  } else if (type === 'skill') {
+    container.querySelectorAll('[data-skill-id]').forEach(el => {
+      el.addEventListener('click', () => selectSkillById(el.dataset.skillId));
+    });
+  } else if (type === 'agent') {
+    container.querySelectorAll('[data-agent-id]').forEach(el => {
+      el.addEventListener('click', () => selectAgentById(el.dataset.agentId));
+    });
+  }
+}
+
+function selectCmdById(id) {
+  selectedSkill = null;
+  selectedAgent = null;
+  // Support both full IDs ("global--plan") and partial IDs ("plan") for workflow/chain links
+  const cmd = commands.find(c => c.id === id) || commands.find(c => c.id.endsWith('--' + id));
+  if (!cmd) return;
+  selectedCmd = cmd.id;
+  showCmdDetail(cmd);
+  renderCommands();
+}
+
+function selectSkillById(id) {
+  selectedSkill = id;
+  selectedCmd = null;
+  selectedAgent = null;
+  const sk = skills.find(s => s.id === id);
+  if (!sk) return;
+  showSkillDetail(sk);
+  renderSkills();
+}
+
+function selectAgentById(id) {
+  selectedAgent = id;
+  selectedCmd = null;
+  selectedSkill = null;
+  const ag = agents.find(a => a.id === id);
+  if (!ag) return;
+  showAgentDetail(ag);
+  renderAgents();
+}
+
+function showCmdDetail(cmd) {
+  const s = {meta:'m',ops:'o',content:'c'}[cmd.stream] || cmd.stream;
+  const streamLabel = {meta:'Meta',ops:'Ops',content:'Content'}[cmd.stream] || cmd.stream;
+
+  let chainsHtml = '';
+  if (cmd.chains.length) {
+    chainsHtml = `<div class="d-section"><div class="d-label">Chains Into</div><div class="d-chains">${cmd.chains.map(c => {
+      const cid = escapeHtml(c.replace(/\//g,'-').replace(/^-/,''));
+      return `<span class="d-chain" data-go="${cid}">${escapeHtml(c)}</span>`;
+    }).join('')}</div></div>`;
+  }
+
+  let outputHtml = '';
+  if (cmd.outputPath) {
+    outputHtml = `<div class="d-section"><div class="d-label">Output Path</div><div class="d-output-box"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M1.5 2A1.5 1.5 0 013 .5h4.586a1.5 1.5 0 011.06.44l1.415 1.414a1.5 1.5 0 01.439 1.06V3.5h2A1.5 1.5 0 0114 5v8.5a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 012 13.5V12H1.5A1.5 1.5 0 010 10.5v-7A1.5 1.5 0 011.5 2z" fill="currentColor" opacity="0.5"/></svg>${escapeHtml(cmd.outputPath)}</div></div>`;
+  }
+
+  const projectIcon = scopeIcon(cmd.scope);
+
+  detailEl.innerHTML = `
+    <div class="d-head">
+      <div class="d-close" id="d-close" aria-label="Close">&times;</div>
+      <div class="d-stream ${s}">${escapeHtml(streamLabel)}</div>
+      <div class="d-project"><span class="d-project-icon">${projectIcon}</span> ${escapeHtml(cmd.project)}</div>
+      <div class="d-name">${escapeHtml(cmd.name)}</div>
+      <div class="d-tagline">${escapeHtml(cmd.tagline)}</div>
+      <span class="d-badge ${escapeHtml(cmd.mode)}">${modeLabel(cmd.mode)}</span>
+    </div>
+    <div class="d-desc">${escapeHtml(cmd.desc)}</div>
+    <div class="d-section"><div class="d-label">When to Use</div><div class="d-val">${escapeHtml(cmd.when)}</div></div>
+    <div class="d-section"><div class="d-label">Input</div><div class="d-val">${escapeHtml(cmd.input)}</div></div>
+    <div class="d-section"><div class="d-label">Output</div><div class="d-val">${escapeHtml(cmd.output)}</div></div>
+    ${outputHtml}
+    ${chainsHtml}
+    <div class="d-divider"></div>
+    <div class="d-section"><div class="d-label">Tags</div><div class="d-tags">${cmd.tags.map(t => `<span class="d-tag">${escapeHtml(t)}</span>`).join('')}</div></div>
+  `;
+
+  rightPanel.classList.add('open');
+  document.getElementById('d-close').addEventListener('click', closeDetail);
+  detailEl.querySelectorAll('.d-chain[data-go]').forEach(el => {
+    el.addEventListener('click', () => selectCmdById(el.dataset.go));
+  });
+}
+
+function showSkillDetail(sk) {
+  const domainLabels = { integration:'Integration', 'content-mkt':'Content & Marketing', web:'Web & Design', 'skill-meta':'Meta' };
+  const projectIcon = scopeIcon(sk.scope);
+  const domainLabel = domainLabels[sk.domain] || sk.domain;
+
+  detailEl.innerHTML = `
+    <div class="d-head">
+      <div class="d-close" id="d-close" aria-label="Close">&times;</div>
+      <div class="d-stream ${sk.domain}">${escapeHtml(domainLabel)}</div>
+      <div class="d-project"><span class="d-project-icon">${projectIcon}</span> ${escapeHtml(sk.project)}</div>
+      <div class="d-name">${escapeHtml(sk.name)}</div>
+      <div class="d-tagline">${escapeHtml(sk.tagline)}</div>
+      <span class="d-badge auto-invoked">Auto-Invoked</span>
+    </div>
+    <div class="d-desc">${escapeHtml(sk.desc)}</div>
+    <div class="d-section">
+      <div class="d-label">Trigger Condition</div>
+      <div class="d-trigger-box">${escapeHtml(sk.trigger)}</div>
+    </div>
+    <div class="d-section">
+      <div class="d-label">Context Loaded</div>
+      <div class="d-context-box">${escapeHtml(sk.context)}</div>
+    </div>
+  `;
+
+  rightPanel.classList.add('open');
+  document.getElementById('d-close').addEventListener('click', closeDetail);
+}
+
+function showAgentDetail(ag) {
+  const projectIcon = scopeIcon(ag.scope);
+
+  detailEl.innerHTML = `
+    <div class="d-head">
+      <div class="d-close" id="d-close" aria-label="Close">&times;</div>
+      <div class="d-stream agent">${escapeHtml(ag.category.charAt(0).toUpperCase() + ag.category.slice(1))}</div>
+      <div class="d-project"><span class="d-project-icon">${projectIcon}</span> ${escapeHtml(ag.project)}</div>
+      <div class="d-name">${escapeHtml(ag.name)}</div>
+      <span class="d-badge agent-badge">${escapeHtml(ag.model || 'sonnet')}</span>
+    </div>
+    <div class="d-desc">${escapeHtml(ag.desc)}</div>
+    <div class="d-section">
+      <div class="d-label">When to Use</div>
+      <div class="d-val">${escapeHtml(ag.whenToUse)}</div>
+    </div>
+    <div class="d-section">
+      <div class="d-label">Available Tools</div>
+      <div class="d-tools-box">${escapeHtml(ag.tools)}</div>
+    </div>
+  `;
+
+  rightPanel.classList.add('open');
+  document.getElementById('d-close').addEventListener('click', closeDetail);
+}
+
+function closeDetail() {
+  rightPanel.classList.remove('open');
+  selectedCmd = null;
+  selectedSkill = null;
+  selectedAgent = null;
+  renderActiveTab();
+}
+
+// ── Theme Toggle ──
+const themeToggle = document.getElementById('theme-toggle');
+function applyTheme(mode) {
+  if (mode === 'light') {
+    document.documentElement.classList.add('light');
+    themeToggle.innerHTML = '&#9728;'; // sun
+  } else {
+    document.documentElement.classList.remove('light');
+    themeToggle.innerHTML = '&#9790;'; // moon
+  }
+}
+
+const savedTheme = localStorage.getItem('cmd-dash-theme');
+if (savedTheme) {
+  applyTheme(savedTheme);
+} else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+  applyTheme('light');
+}
+
+themeToggle.addEventListener('click', () => {
+  const isLight = document.documentElement.classList.contains('light');
+  const newTheme = isLight ? 'dark' : 'light';
+  applyTheme(newTheme);
+  localStorage.setItem('cmd-dash-theme', newTheme);
+});
+
+// ── Initialize ──
+buildProjectPills();
+computeTopbarStats();
+renderCommands();
+</script>
+</body>
+</html>
