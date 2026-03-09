@@ -1,7 +1,7 @@
 # Command Dashboard v2 — Workspace-Wide Installer
 
 > A plug-and-play module by Alex McConnachie | [lightleads.com.au](https://lightleads.com.au)
-> Workspace-wide scanning by mindm
+> Workspace-wide scanning, UI enhancements, and Copy to Global by Nick Martin ([@mindmatter-aia](https://github.com/mindmatter-aia)) | [PatriotAgentic LLC](https://www.patriotagentic.com)
 
 <!-- MODULE METADATA
 module: command-dashboard
@@ -91,8 +91,9 @@ Walk through each option:
    - Midnight (deep black bg `#0a0a0a`, cyan accents, subtle glow)
    - Forest (dark green bg `#0d1a0d`, green accents, earthy tones)
    - Custom (user provides hex values for bg, surface, border, accent colours)
-8. **Logo** (optional) — User provides a path to an image file. Read the file, convert to base64, and save as `outputs/logo-base64.txt`. The base64 string is embedded as an `<img>` tag in the dashboard.
-9. **Font style** — Offer presets:
+8. **Native commands**: Include Claude Code's built-in slash commands as a reference section
+9. **Logo** (optional) — User provides a path to an image file. Read the file, convert to base64, and save as `outputs/logo-base64.txt`. The base64 string is embedded as an `<img>` tag in the dashboard.
+10. **Font style** — Offer presets:
    - Modern (Inter + JetBrains Mono — clean, default)
    - Classic (Space Grotesk display + IBM Plex Sans body + JetBrains Mono)
    - Minimal (system fonts — no external loading)
@@ -157,7 +158,15 @@ ls ~/.claude/commands/ 2>/dev/null
 
 If found, confirm: "Found global commands in `~/.claude/commands/`. Include them?"
 
-**1d. Present discovery results:**
+**1d. Check global agents:**
+
+```bash
+ls ~/.claude/agents/ 2>/dev/null
+```
+
+If found, confirm: "Found global agents in `~/.claude/agents/`. Include them?"
+
+**1e. Present discovery results:**
 
 Show the user what was found:
 ```
@@ -209,6 +218,7 @@ output     — what the command produces
 outputPath — file system path where output is saved (or "")
 chains     — other command IDs this leads into (or [])
 tags       — 3-6 keyword tags
+sourcePath — absolute path to the source .md file on disk (enables "Copy to Global" in dashboard)
 ```
 
 **Mode classification guide:**
@@ -217,6 +227,44 @@ tags       — 3-6 keyword tags
 - `"one-shot"`: quick single action, displays info, captures one thing
 
 Store all in a JavaScript array and show the user: "Found **X global commands**: [list names]. Look right?"
+
+---
+
+### Step 2b: Scan Global Agents
+
+If global agents were detected in Step 1d, scan all `.md` files or subdirectories in `~/.claude/agents/`:
+
+**For each agent file/directory, extract these fields:**
+
+```
+id         — "global--{agent-name}" (derived from filename or directory name)
+name       — human-readable name from heading or filename
+project    — "global"
+scope      — "global"
+category   — classify: "architecture", "review", "testing", "build", "docs", "security", "cleanup"
+desc       — what the agent does
+whenToUse  — when to use this agent
+tools      — comma-separated list of tools available
+model      — suggested model: "opus", "sonnet", or "haiku" (or "" if unspecified)
+```
+
+Show the user: "Found **X global agents**: [list names]. Look right?"
+
+---
+
+### Step 2c: Enumerate Native Commands (optional)
+
+Claude Code has built-in slash commands. If the user wants to include them in the dashboard, add entries for the known native commands. These are the same for all Claude Code users:
+
+`/clear`, `/compact`, `/context`, `/memory`, `/diff`, `/review`, `/doctor`, `/init`, `/model`, `/config`, `/cost`, `/mcp`, `/hooks`, `/export`, `/resume`, `/plan`
+
+For each, create a command entry with:
+- `scope: "native"`, `project: "claude-code"`
+- `stream`: classify (mostly "meta", some "ops")
+- `mode`: classify ("one-shot", "interactive", or "automated")
+- No `sourcePath` (native commands have no .md file)
+
+Ask: "Want to include Claude Code's built-in commands in the dashboard? They give new users a quick reference."
 
 ---
 
@@ -357,6 +405,7 @@ Write `cmd-dash-config.json` alongside the output HTML:
   "scanRoots": ["{absolute path to workspace root}"],
   "excludePaths": [],
   "sharedLibraryPath": "{absolute path to shared library, or empty string}",
+  "globalAgentsPath": "{absolute path to ~/.claude/agents/, or empty string}",
   "includeArchived": false,
   "includeServices": true,
   "includeWorkflows": true,
@@ -399,6 +448,13 @@ Read `templates/dashboard-template.html` from this module folder.
 **Theme preset CSS overrides:**
 
 Each preset generates a `:root { }` block injected at `/* __THEME_OVERRIDES__ */`. The block overrides CSS variables from the default `:root`. A matching `html.light { }` override is also generated for presets that define light-mode variants. If the preset is `custom`, use the hex values from `config.theme.customColors`.
+
+**`--glow` values per preset** (card hover glow colour):
+- GitHub Dark: no override needed (uses template default `rgba(88, 166, 255, 0.1)`)
+- Navy & Red: `--glow: rgba(30, 58, 138, 0.5);`
+- Midnight: `--glow: rgba(0, 200, 255, 0.15);`
+- Forest: `--glow: rgba(34, 197, 94, 0.12);`
+- Custom: user provides or defaults to template value
 
 **Font preset replacements:**
 
@@ -492,4 +548,4 @@ If everything looks good: "Your workspace dashboard is live! Run `/cmd-dash-upda
 ---
 
 > Created by Alex McConnachie | [lightleads.com.au](https://lightleads.com.au)
-> Workspace-wide scanning by mindm
+> Workspace-wide scanning, UI enhancements, and Copy to Global by Nick Martin ([@mindmatter-aia](https://github.com/mindmatter-aia)) | [PatriotAgentic LLC](https://www.patriotagentic.com)

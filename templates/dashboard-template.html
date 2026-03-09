@@ -1,5 +1,5 @@
 <!-- Command Dashboard v1 — Created by Alex McConnachie | lightleads.com.au -->
-<!-- Command Dashboard v2 — Workspace-wide scanning by mindm -->
+<!-- Command Dashboard v2 — Workspace-wide scanning, UI enhancements, and Copy to Global by Nick Martin (@mindmatter-aia) | PatriotAgentic LLC | www.patriotagentic.com -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -27,6 +27,7 @@
     --accent-teal: #39d2c0;
     --accent-pink: #f778ba;
     --accent-cyan: #79c0ff;
+    --glow: rgba(88, 166, 255, 0.1);
     --radius: 8px;
     --radius-lg: 12px;
     --theme-toggle-bg: var(--surface);
@@ -50,6 +51,7 @@
     --accent-teal: #1b7c83;
     --accent-pink: #bf3989;
     --accent-cyan: #0550ae;
+    --glow: rgba(9, 105, 218, 0.08);
     --theme-toggle-bg: var(--surface);
     --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
@@ -377,7 +379,7 @@
     padding: 16px 18px; cursor: pointer; transition: all 0.15s;
     display: flex; flex-direction: column; gap: 8px;
   }
-  .g-card:hover { border-color: var(--border-light); background: var(--surface-hover); }
+  .g-card:hover { border-color: var(--border-light); background: var(--surface-hover); box-shadow: 0 4px 20px var(--glow); transform: translateY(-1px); }
   .g-card.active { border-color: var(--accent-blue); background: var(--surface-active); }
   .g-card.skill-active { border-color: var(--accent-teal); background: var(--surface-active); }
   .g-card.agent-active { border-color: var(--accent-purple); background: var(--surface-active); }
@@ -493,6 +495,16 @@
   .d-chain:hover { background: rgba(88,166,255,0.15); }
   .d-tags { display: flex; flex-wrap: wrap; gap: 5px; }
   .d-tag { padding: 2px 8px; background: rgba(139,148,158,0.08); border-radius: 4px; font-size: 11px; color: var(--text-dim); }
+
+  .d-make-global {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: var(--radius);
+    background: transparent; border: 1px solid var(--border-light);
+    color: var(--accent-cyan); cursor: pointer; font-size: 13px;
+    font-family: var(--font); transition: all 0.15s ease;
+  }
+  .d-make-global:hover { background: rgba(121,192,255,0.1); }
+  .d-make-global.copied { background: rgba(63,185,80,0.12); border-color: var(--accent-green); color: var(--accent-green); }
   .d-trigger-box {
     padding: 12px 14px; background: rgba(57,210,192,0.04); border: 1px solid rgba(57,210,192,0.12);
     border-radius: var(--radius); font-size: 13px; color: var(--text-muted); line-height: 1.55;
@@ -664,6 +676,15 @@ const dashConfig = { generatedAt:"", projectCount:0, pageTitle:"Workspace Dashbo
 
 /* __COMMANDS_DATA__ */
 const commands = [
+  // ── NATIVE (Claude Code Built-in) ──
+  { id:"native--clear", name:"/clear", stream:"meta", mode:"one-shot",
+    project:"claude-code", scope:"native",
+    tagline:"Clear conversation history and context",
+    desc:"Clears the current conversation history. Use when starting a fresh task.",
+    when:"Starting a new task or context window is full.",
+    input:"None", output:"Cleared conversation", outputPath:"",
+    chains:[], tags:["session","context","reset"] },
+
   // ── META ──
   { id:"global--plan", name:"/plan [request]", stream:"meta", mode:"automated",
     project:"global", scope:"global",
@@ -691,7 +712,8 @@ const commands = [
     when:"Weekly or monthly review. After major milestones.",
     input:"None",
     output:"Status report markdown", outputPath:"outputs/ops/reports/",
-    chains:[], tags:["metrics","reporting"] },
+    chains:[], tags:["metrics","reporting"],
+    sourcePath:"/home/user/projects/example-project/.claude/commands/ops/report.md" },
 
   // ── CONTENT ──
   { id:"example--content-draft", name:"/content/draft [topic]", stream:"content", mode:"interactive",
@@ -787,8 +809,8 @@ function buildProjectPills() {
   });
   // Sort: global first, then shared, then alphabetical projects
   const sorted = [...projects.entries()].sort((a, b) => {
-    const order = { global: 0, shared: 1, project: 2 };
-    const diff = (order[a[1]] || 2) - (order[b[1]] || 2);
+    const order = { native: 0, global: 1, shared: 2, project: 3 };
+    const diff = (order[a[1]] ?? 3) - (order[b[1]] ?? 3);
     if (diff !== 0) return diff;
     return a[0].localeCompare(b[0]);
   });
@@ -804,7 +826,7 @@ function buildProjectPills() {
     btn.className = 'pill project-pill';
     btn.dataset.f = proj;
     btn.dataset.scope = scope;
-    const icon = scope === 'global' ? '\u{1F310}' : scope === 'shared' ? '\u{1F517}' : '\u{1F4C1}';
+    const icon = scope === 'native' ? '\u{2699}' : scope === 'global' ? '\u{1F310}' : scope === 'shared' ? '\u{1F517}' : '\u{1F4C1}';
     btn.textContent = icon + ' ' + proj;
     pillContainer.appendChild(btn);
   });
@@ -981,12 +1003,14 @@ function escapeHtml(str) {
 }
 
 function scopeIcon(scope) {
+  if (scope === 'native') return '\u{2699}';
   if (scope === 'global') return '\u{1F310}';
   if (scope === 'shared') return '\u{1F517}';
   return '\u{1F4C1}';
 }
 
 function scopeLabel(scope) {
+  if (scope === 'native') return 'Claude Code Built-in';
   if (scope === 'global') return 'Global Commands';
   if (scope === 'shared') return 'Shared Library';
   return '';
@@ -1105,8 +1129,8 @@ function groupByScope(items) {
 
   // Sort: global first, shared second, then alphabetical project names
   return [...map.values()].sort((a, b) => {
-    const order = { global: 0, shared: 1, project: 2 };
-    const diff = (order[a.scope] || 2) - (order[b.scope] || 2);
+    const order = { native: 0, global: 1, shared: 2, project: 3 };
+    const diff = (order[a.scope] ?? 3) - (order[b.scope] ?? 3);
     if (diff !== 0) return diff;
     return a.project.localeCompare(b.project);
   });
@@ -1117,7 +1141,8 @@ function renderScopeSection(group, type, showProjectBadge) {
   const key = group.project;
   const isCollapsed = scopeCollapsed[key] === true;
   const icon = scopeIcon(group.scope);
-  const subtitle = group.scope === 'shared' ? '<span class="scope-subtitle">Reusable across projects</span>' : '';
+  const subtitles = { shared: 'Reusable across projects', native: 'Built into Claude Code' };
+  const subtitle = subtitles[group.scope] ? `<span class="scope-subtitle">${subtitles[group.scope]}</span>` : '';
 
   let html = `<div class="scope-hdr ${group.scope}" data-scope="${escapeHtml(key)}">
     <span class="scope-icon">${icon}</span>
@@ -1326,6 +1351,7 @@ function showCmdDetail(cmd) {
     ${chainsHtml}
     <div class="d-divider"></div>
     <div class="d-section"><div class="d-label">Tags</div><div class="d-tags">${cmd.tags.map(t => `<span class="d-tag">${escapeHtml(t)}</span>`).join('')}</div></div>
+    ${cmd.scope !== 'global' && cmd.scope !== 'native' && cmd.sourcePath ? `<div class="d-divider"></div><button class="d-make-global" data-src="${escapeHtml(cmd.sourcePath)}" data-name="${escapeHtml(cmd.name.split(' ')[0].replace(/^\//,''))}">\u{1F310} Copy to Global</button>` : ''}
   `;
 
   rightPanel.classList.add('open');
@@ -1333,6 +1359,23 @@ function showCmdDetail(cmd) {
   detailEl.querySelectorAll('.d-chain[data-go]').forEach(el => {
     el.addEventListener('click', () => selectCmdById(el.dataset.go));
   });
+
+  const makeGlobalBtn = detailEl.querySelector('.d-make-global');
+  if (makeGlobalBtn) {
+    makeGlobalBtn.addEventListener('click', () => {
+      const src = makeGlobalBtn.dataset.src;
+      const name = makeGlobalBtn.dataset.name;
+      const copyCmd = `cp "${src}" ~/.claude/commands/${name}.md`;
+      navigator.clipboard.writeText(copyCmd).then(() => {
+        makeGlobalBtn.classList.add('copied');
+        makeGlobalBtn.innerHTML = '\u{2705} Copied! Paste in terminal';
+        setTimeout(() => {
+          makeGlobalBtn.classList.remove('copied');
+          makeGlobalBtn.innerHTML = '\u{1F310} Copy to Global';
+        }, 3000);
+      });
+    });
+  }
 }
 
 function showSkillDetail(sk) {

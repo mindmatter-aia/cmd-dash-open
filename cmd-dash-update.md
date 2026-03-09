@@ -15,11 +15,16 @@ Reads `cmd-dash-config.json`, rescans all configured paths, and regenerates the 
    - Search parent directories (up to 4 levels)
    - If not found, ask the user where it is
 
-2. **Read config** — Load `cmd-dash-config.json` and the template from `templatePath`. If `templatePath` is invalid or the file doesn't exist, fall back to `templates/dashboard-template.html` relative to the config file's directory.
+2. **Read config** — Load `cmd-dash-config.json` and the template from `templatePath`. If `templatePath` is invalid or the file doesn't exist, fall back to `templates/dashboard-template.html` relative to the config file's directory. Read `globalAgentsPath` from config (may be absent in older configs — treat as empty string).
 
 3. **Scan global commands** — Scan `globalCommandsPath` for all `.md` files
    - Set `scope: "global"`, `project: "global"`
    - Extract: id, name, stream, mode, tagline, desc, when, input, output, outputPath, chains, tags
+
+3b. **Scan global agents** — If `globalAgentsPath` is set and non-empty:
+   - Scan for `.md` files and subdirectories in `globalAgentsPath`
+   - Set `scope: "global"`, `project: "global"`
+   - Extract: id, name, category, desc, whenToUse, tools, model
 
 4. **Scan shared library** — If `sharedLibraryPath` is set and non-empty:
    - Scan `commands/` for `.md` files → `scope: "shared"`, `project: "shared-library"`
@@ -41,7 +46,7 @@ Reads `cmd-dash-config.json`, rescans all configured paths, and regenerates the 
    - Workflow and services HTML if `includeWorkflows`/`includeServices` are true
 
    **Theme injection** (read from `config.theme`):
-   - Determine CSS variable overrides from `theme.preset` (or `theme.customColors` if preset is `custom`)
+   - Determine CSS variable overrides from `theme.preset` (or `theme.customColors` if preset is `custom`), including `--glow` for card hover effect
    - Determine Google Fonts `@import` URL from `theme.font` preset
    - `/* __FONT_IMPORT__ */` + default import line → correct `@import` for chosen font (or remove for `minimal`)
    - `/* __THEME_OVERRIDES__ */` → `:root { }` block with CSS variable overrides (empty for `github-dark`)
